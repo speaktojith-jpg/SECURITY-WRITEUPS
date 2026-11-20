@@ -1,0 +1,26 @@
+# Objective 1.1: Compare and Contrast Various Types of Security Controls
+
+## Control Categories (How it is implemented)
+- **Technical (Logical):** Implemented via systems, software, or hardware (firewalls, encryption, MFA).
+- **Managerial (Administrative):** Policies, governance, and risk management procedures (AUP, background checks).
+- **Operational:** Executed by people rather than systems (security training, guard patrols, log review).
+- **Physical:** Tangible barriers and environmental safeguards (fences, bollards, badge readers, locks).
+
+---
+
+## Security Controls Matrix (Category × Functional Type)
+
+| Control Type | Technical (Logical) | Managerial (Administrative) | Operational | Physical |
+| :--- | :--- | :--- | :--- | :--- |
+| **Preventive**<br>*(Stops attack before it happens)* | Firewall rules, ACLs, encryption, MFA | Security policies, background checks, separation of duties | Security awareness training, onboarding procedures | Bollards, mantraps, badge readers, fences |
+| **Deterrent**<br>*(Discourages attacker)* | Login warning banners | Threat of termination or legal action in AUP | Guard patrols, front-desk sign-in | Warning signs, visible CCTV, bright lighting |
+| **Detective**<br>*(Identifies/alerts during or after)* | IDS, SIEM alerts, File Integrity Monitoring (FIM) | Log review policies, internal audits | Reviewing CCTV footage, guard rounds | Motion sensors, glass-break detectors |
+| **Corrective**<br>*(Restores state after incident)* | Patching, antivirus quarantine, automated failover | Incident response plan, disaster recovery policy | Restoring from backups, rebooting affected hosts | Fire extinguishers, sprinklers |
+| **Compensating**<br>*(Alternative when primary isn't feasible)* | Virtual patching (WAF rule) for legacy OS | Exception approval documentation | Manual dual-approval for legacy system access | Security guard stationed at a broken gate |
+| **Directive**<br>*(Instructs behavior/compliance)* | Group Policy (GPO) enforcing screen lock | Acceptable Use Policy (AUP), password policy | Standard Operating Procedures (SOPs) | "Authorized Personnel Only" / "Exit" signs |
+
+---
+
+## Key Exam Distinctions
+- **Deterrent vs. Directive:** A sign reading *"Protected by 24/7 Video Surveillance"* is **Deterrent** (discourages action). A sign reading *"Employees Must Wear Badges"* is **Directive** (mandates a rule).
+- **Technical vs. Operational:** A firewall blocking packets is **Technical** (automated system). An analyst reviewing firewall logs is **Operational** (human execution).

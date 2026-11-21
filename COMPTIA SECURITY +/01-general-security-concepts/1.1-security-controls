@@ -1,26 +1,90 @@
-# Objective 1.1: Compare and Contrast Various Types of Security Controls
+# CompTIA Security+ (SY0-701) — Objective 1.1: Security Controls
 
-## Control Categories (How it is implemented)
-- **Technical (Logical):** Implemented via systems, software, or hardware (firewalls, encryption, MFA).
-- **Managerial (Administrative):** Policies, governance, and risk management procedures (AUP, background checks).
-- **Operational:** Executed by people rather than systems (security training, guard patrols, log review).
-- **Physical:** Tangible barriers and environmental safeguards (fences, bollards, badge readers, locks).
+**Objective:** Compare and contrast various types of security controls.  
+**Study Date:** November 20, 2026  
 
 ---
 
-## Security Controls Matrix (Category × Functional Type)
+## 1. Control Categories (How a Control Is Implemented)
+
+- **Technical (Logical):** Implemented through technology, software, or hardware mechanisms (e.g., firewalls, encryption, MFA, ACLs).
+- **Managerial (Administrative):** Policies, governance frameworks, and risk management procedures created by leadership (e.g., Acceptable Use Policy, background checks).
+- **Operational:** Executed primarily by people rather than automated systems (e.g., security awareness training, guard patrols, manual log review).
+- **Physical:** Tangible barriers and environmental safeguards protecting facilities and hardware (e.g., bollards, mantraps, badge readers, fences).
+
+---
+
+## 2. Control Types (What a Control Does)
+
+- **Preventive:** Stops an unauthorized action or security incident before it occurs.
+- **Deterrent:** Discourages an attacker from attempting an intrusion by increasing perceived risk or consequences.
+- **Detective:** Identifies, logs, and alerts on an event during or after it occurs.
+- **Corrective:** Restores systems or data to a normal, secure state after an incident.
+- **Compensating:** Serves as an alternative safeguard when a primary control is not technically or financially feasible.
+- **Directive:** Instructs, guides, or mandates compliant human or system behavior.
+
+---
+
+## 3. Security Controls Matrix (Category × Functional Type)
 
 | Control Type | Technical (Logical) | Managerial (Administrative) | Operational | Physical |
 | :--- | :--- | :--- | :--- | :--- |
 | **Preventive**<br>*(Stops attack before it happens)* | Firewall rules, ACLs, encryption, MFA | Security policies, background checks, separation of duties | Security awareness training, onboarding procedures | Bollards, mantraps, badge readers, fences |
-| **Deterrent**<br>*(Discourages attacker)* | Login warning banners | Threat of termination or legal action in AUP | Guard patrols, front-desk sign-in | Warning signs, visible CCTV, bright lighting |
-| **Detective**<br>*(Identifies/alerts during or after)* | IDS, SIEM alerts, File Integrity Monitoring (FIM) | Log review policies, internal audits | Reviewing CCTV footage, guard rounds | Motion sensors, glass-break detectors |
-| **Corrective**<br>*(Restores state after incident)* | Patching, antivirus quarantine, automated failover | Incident response plan, disaster recovery policy | Restoring from backups, rebooting affected hosts | Fire extinguishers, sprinklers |
-| **Compensating**<br>*(Alternative when primary isn't feasible)* | Virtual patching (WAF rule) for legacy OS | Exception approval documentation | Manual dual-approval for legacy system access | Security guard stationed at a broken gate |
+| **Deterrent**<br>*(Discourages attacker)* | Pre-login warning banners | Threat of termination or legal action in AUP | Guard patrols, front-desk sign-in logs | Warning signs, visible CCTV, bright perimeter lighting |
+| **Detective**<br>*(Identifies/alerts during or after)* | IDS, SIEM alerts, File Integrity Monitoring (FIM), audit logs | Log review policies, internal audits | Reviewing CCTV footage, security guard rounds | Motion sensors, glass-break detectors |
+| **Corrective**<br>*(Restores state after incident)* | Patching, antivirus quarantine, automated failover | Incident response plan, disaster recovery policy | Restoring from backups, rebooting affected hosts | Fire extinguishers, sprinkler systems |
+| **Compensating**<br>*(Alternative when primary isn't feasible)* | Virtual patching (WAF rule) for legacy unpatchable OS | Formal risk exception approval documentation | Manual dual-approval for legacy system access | Security guard stationed at a broken electronic gate |
 | **Directive**<br>*(Instructs behavior/compliance)* | Group Policy (GPO) enforcing screen lock | Acceptable Use Policy (AUP), password policy | Standard Operating Procedures (SOPs) | "Authorized Personnel Only" / "Exit" signs |
 
 ---
 
-## Key Exam Distinctions
-- **Deterrent vs. Directive:** A sign reading *"Protected by 24/7 Video Surveillance"* is **Deterrent** (discourages action). A sign reading *"Employees Must Wear Badges"* is **Directive** (mandates a rule).
-- **Technical vs. Operational:** A firewall blocking packets is **Technical** (automated system). An analyst reviewing firewall logs is **Operational** (human execution).
+## 4. Key Exam Distinctions & Traps
+
+- **Deterrent vs. Directive Signage:** A sign stating *"Protected by 24/7 Video Surveillance"* is **Deterrent** (discourages attackers). A sign stating *"Employees Must Wear Badges"* or *"Authorized Personnel Only"* is **Directive** (instructs required compliance).
+- **Technical vs. Operational Execution:** A firewall or SIEM rule automatically blocking/flagging traffic is **Technical**. A human analyst reviewing SIEM alerts or conducting phishing simulations is **Operational**.
+- **Compensating Controls on Legacy Systems:** Whenever an exam question mentions a legacy OS (e.g., Windows Server 2008) that cannot be patched or upgraded, isolating it on a segmented VLAN or placing a WAF in front of it is a **Technical / Compensating** control.
+
+---
+
+### 5. Practical Lab Verification (Kali Linux)
+
+### A. Technical / Preventive — Packet Filtering & Network Isolation (`iptables`)
+Verified active `DOCKER-ISOLATION-STAGE-1` and `STAGE-2` chains enforcing `DROP` rules across container bridge networks alongside stateful connection tracking (`ctstate RELATED,ESTABLISHED`):
+
+```text
+$ sudo iptables -L -n
+Chain INPUT (policy ACCEPT)
+target     prot opt source               destination         
+
+Chain FORWARD (policy ACCEPT)
+target     prot opt source               destination         
+DOCKER-USER  all  --  0.0.0.0/0            0.0.0.0/0           
+DOCKER-FORWARD  all  --  0.0.0.0/0            0.0.0.0/0           
+
+Chain DOCKER-CT (1 references)
+target     prot opt source               destination         
+ACCEPT     all  --  0.0.0.0/0            0.0.0.0/0            ctstate RELATED,ESTABLISHED
+
+Chain DOCKER-ISOLATION-STAGE-2 (1 references)
+target     prot opt source               destination         
+DROP       all  --  0.0.0.0/0            0.0.0.0/0
+B. Technical / Deterrent & Directive — SSH Pre-Login Banner (sshd_config)
+
+Confirmed the SSH login warning banner directive is commented out by default (#Banner none). Enabling /etc/issue.net enforces a legal warning before authentication:
+Plaintext
+
+$ grep -i "banner" /etc/ssh/sshd_config
+# no default banner path
+#Banner none
+
+C. Technical / Detective — Privilege Escalation Audit Trail (journalctl)
+
+Modern Kali/Debian systems log authentication and sudo events via systemd-journald rather than legacy /var/log/auth.log. Verified complete audit accountability (TTY, PWD, USER, COMMAND):
+Plaintext
+
+$ sudo journalctl _COMM=sudo -n 10 --no-pager
+Nov 20 16:37:31 <host> sudo[15021]: <user> : TTY=pts/0 ; PWD=/home/<user> ; USER=root ; COMMAND=/usr/sbin/ufw status numbered
+Nov 20 16:37:31 <host> sudo[15021]: pam_unix(sudo:session): session opened for user root(uid=0) by <user>(uid=1000)
+Nov 20 16:39:31 <host> sudo[16124]: <user> : TTY=pts/0 ; PWD=/home/<user> ; USER=root ; COMMAND=/usr/bin/tail -n 10 /var/log/auth.log
+Nov 20 16:41:48 <host> sudo[17319]: <user> : TTY=pts/0 ; PWD=/home/<user> ; USER=root ; COMMAND=/usr/bin/journalctl _COMM=sudo -n 10 --no-pager
+

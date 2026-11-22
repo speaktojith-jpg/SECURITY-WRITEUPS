@@ -1,0 +1,125 @@
+# CompTIA Security+ (SY0-701) — Objective 1.4 (Part 1): Cryptographic Solutions
+
+**Objective:** Explain the importance of using appropriate cryptographic solutions (Symmetric, Asymmetric, Hashing, Salting, and Key Stretching).  
+**Study Date:** November 22, 2026 (Day 5)  
+
+---
+
+## 1. Symmetric vs. Asymmetric Encryption
+
+| Feature | Symmetric Encryption | Asymmetric Encryption (Public-Key) |
+| :--- | :--- | :--- |
+| **Keys Used** | **1 shared secret key** for encryption and decryption | **Key pair:** Public key (openly shared) + Private key (kept secret) |
+| **Speed** | **Very fast** — used for bulk data (disk encryption, TLS payload, VPNs) | **Slow** — used for key exchange, digital signatures, and small secrets |
+| **Key Distribution** | Requires secure out-of-band key exchange | Public key can be distributed openly over untrusted networks |
+| **Algorithms** | **AES** (128/192/256), **ChaCha20** *(Legacy/Broken: 3DES, DES, RC4)* | **RSA**, **ECC** (ECDSA/ECDH), **Diffie-Hellman (DH)** |
+
+### Symmetric Cipher Modes & Types
+- **Stream Ciphers:** Encrypt data bit-by-bit/byte-by-byte (e.g., **ChaCha20**).
+- **Block Ciphers:** Encrypt fixed-size blocks (e.g., **AES** uses 128-bit blocks):
+  - **ECB (Electronic Codebook):** Insecure—identical plaintext blocks yield identical ciphertext blocks.
+  - **CBC (Cipher Block Chaining):** Uses a random **Initialization Vector (IV)** to randomize identical plaintext blocks.
+  - **GCM (Galois/Counter Mode):** Provides **Authenticated Encryption (AEAD)**—confidentiality + integrity in one operation (TLS 1.3 standard).
+
+---
+
+## 2. Hashing, Salting, Key Stretching & Digital Signatures
+
+| Mechanism | Purpose | Standard Algorithms |
+| :--- | :--- | :--- |
+| **Cryptographic Hashing** | One-way fixed-length digest verifying **Integrity** *(collision-resistant)* | **SHA-256**, **SHA-384**, **SHA-512**, **SHA-3** *(Broken: MD5, SHA-1)* |
+| **Salting** | Adds unique random data per user before hashing to defeat **rainbow tables** | Random CSPRNG salt stored alongside hash |
+| **Key Stretching** | Slows down hashing with high iteration/memory costs to resist brute-force GPUs | **Argon2**, **bcrypt**, **PBKDF2** |
+| **HMAC** | Combines a hash function with a **secret key** to prove integrity + authenticity | **HMAC-SHA256** |
+| **Digital Signature** | Hash encrypted with sender's **private key**; verified with sender's **public key** | **RSA-PSS**, **ECDSA**, **Ed25519** |
+
+---
+
+## 3. Key Exam Distinctions & Traps
+
+- **Confidentiality vs. Non-Repudiation with Asymmetric Keys:**
+  - To send a **secret (confidential)** message to Bob: encrypt with **Bob's Public Key** (only Bob's Private Key can decrypt it).
+  - To **digitally sign (non-repudiation)** a message from Alice: sign with **Alice's Private Key** (anyone can verify with Alice's Public Key).
+- **ECC vs. RSA:** **Elliptic Curve Cryptography (ECC)** provides equivalent security to RSA using much smaller key sizes (e.g., 256-bit ECC ≈ 3072-bit RSA), making it ideal for mobile and IoT devices with limited CPU/battery.
+- **Perfect Forward Secrecy (PFS):** Using ephemeral key exchanges (**ECDHE** / **DHE**) ensures that if a server's long-term private key is compromised later, past captured TLS sessions still cannot be decrypted.
+
+---
+
+## 4. Practical Lab Verification (Kali Linux)
+
+### A. Symmetric AES-256-CBC Encryption with PBKDF2 Key Stretching (`openssl`)
+Encrypting and decrypting a test payload using AES-256 in CBC mode with a random salt and PBKDF2 key derivation:
+
+```text
+$mkdir -p /tmp/secplus_crypto$ echo "TopSecret_SY0_701_Payload" > /tmp/secplus_crypto/secret.txt
+
+# Encrypt using AES-256-CBC with salt and PBKDF2
+$ openssl enc -aes-256-cbc -pbkdf2 -salt -in /tmp/secplus_crypto/secret.txt -out /tmp/secplus_crypto/secret.enc -pass pass:LabPass2026!
+
+# Inspect encrypted binary header (starts with "Salted__")
+$ head -c 16 /tmp/secplus_crypto/secret.enc | xxd
+00000000: 5361 6c74 6564 5f5f 8a4f 12c9 7b3e 01d4  Salted__........
+
+# Decrypt back to plaintext
+$ openssl enc -d -aes-256-cbc -pbkdf2 -in /tmp/secplus_crypto/secret.enc -pass pass:LabPass2026!
+TopSecret_SY0_701_Payload
+
+$ rm -rf /tmp/secplus_crypto
+# CompTIA Security+ (SY0-701) — Objective 1.4 (Part 2): PKI, Certificates & Hardware Security
+
+**Objective:** Explain the importance of using appropriate cryptographic solutions — Public Key Infrastructure (PKI), Certificate Revocation, and Hardware Security (TPM/HSM).  
+**Study Date:** November 22, 2026 (Day 6 — Phase 1 Finale)  
+
+---
+
+## 1. PKI & X.509 Certificate Concepts
+
+| Concept | Description & Security Function |
+| :--- | :--- |
+| **Certificate Authority (CA)** | Trusted entity that validates subject identity and signs X.509 certificates with its private key |
+| **Root CA vs. Intermediate CA** | Offline **Root CA** anchors the chain of trust; online **Intermediate CAs** issue end-entity certs to isolate risk |
+| **CSR (Certificate Signing Request)** | Contains the applicant's **public key** and identity metadata; sent to the CA to generate a signed cert |
+| **Wildcard Certificate** | Secures unlimited first-level subdomains (`*.domain.com`), reducing cert management overhead |
+| **SAN (Subject Alternative Name)** | Lists multiple distinct FQDNs or IP addresses inside a single X.509 certificate |
+| **Certificate Pinning** | Binds a client app to a specific expected server public key/cert to prevent rogue-CA MitM attacks |
+
+---
+
+## 2. Certificate Revocation Mechanisms
+
+| Mechanism | Architecture | Exam Advantage / Limitation |
+| :--- | :--- | :--- |
+| **CRL** | CA publishes a signed batch file of revoked serial numbers | Simple, but slow to update and bandwidth-heavy as lists grow |
+| **OCSP** | Browser queries the CA responder in real time during TLS handshake | Real-time status, but exposes user browsing history to the CA |
+| **OCSP Stapling** | Web server fetches and caches signed OCSP status, attaching it to TLS handshake | Eliminates client privacy leak and reduces TLS handshake latency |
+
+---
+
+## 3. Cryptographic Hardware & Key Lifecycle
+
+- **TPM (Trusted Platform Module):** Motherboard-integrated hardware chip storing full-disk encryption keys (BitLocker) and cryptographic platform measurements for boot integrity.
+- **HSM (Hardware Security Module):** High-throughput, tamper-evident hardware appliance used by CAs and enterprises to protect root private keys and accelerate crypto operations.
+- **Key Escrow:** Storing backup copies of encryption keys under split-knowledge governance so organizations can decrypt critical files if a key custodian departs.
+- **Obfuscation vs. Cryptography:**
+  - **Steganography:** Hiding secret data inside another innocuous carrier file (e.g., LSB pixels of an image or audio file).
+  - **Tokenization:** Replacing sensitive data (e.g., credit card PAN) with a non-sensitive random token mapped via a secure vault (PCI-DSS scope reduction).
+  - **Data Masking:** Redacting or obscuring sensitive fields (e.g., `XXX-XX-1234`) in non-production environments or UI displays.
+
+---
+
+## 4. Practical Lab Verification (Kali Linux)
+
+### Live TLS Certificate Chain & SAN Inspection (`openssl s_client`)
+Inspecting a live TLS handshake to verify the certificate chain (Root → Intermediate → Leaf), public key algorithm, and Subject Alternative Names:
+
+```text
+# Connect via TLS and parse X.509 subject, issuer, validity, and SANs
+$ openssl s_client -connect example.com:443 -servername example.com </dev/null 2>/dev/null \
+  | openssl x509 -noout -subject -issuer -dates -ext subjectAltName
+
+subject=CN = www.example.org
+issuer=C = US, O = DigiCert Inc, CN = DigiCert Global G2 TLS RSA SHA256 2020 CA1
+notBefore=Jan 15 00:00:00 2026 GMT
+notAfter=Jan 15 23:59:59 2027 GMT
+X509v3 Subject Alternative Name:
+    DNS:www.example.org, DNS:example.com, DNS:example.net

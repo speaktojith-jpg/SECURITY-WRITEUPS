@@ -1,0 +1,54 @@
+# CompTIA Security+ (SY0-701) — Objective 1.3: Change Management Processes
+
+**Objective:** Explain the importance of change management processes and the impact of changes on security posture.  
+**Study Date:** November 22, 2026 (Day 4)  
+
+---
+
+## 1. Change Management Governance & Planning
+
+| Component | Role & Security Importance |
+| :--- | :--- |
+| **Approval Process (CAB)** | Formal review and sign-off by the Change Advisory Board (security, engineering, business leads) before production changes occur |
+| **Ownership** | Designates a specific individual accountable for coordinating, executing, and validating the change |
+| **Stakeholders** | Internal teams, management, and end users impacted by the change who require advance notice |
+| **Impact Analysis** | Evaluates potential service disruptions, downstream dependencies, and new security risks before approval |
+| **Test Results** | Documented validation from a staging/sandbox environment proving the change works without breaking existing controls |
+| **Backout Plan** | Pre-tested rollback procedure (VM snapshot, config backup, reverse commands) to restore normal service if deployment fails |
+| **Maintenance Window** | Scheduled off-peak period designated for disruptive updates or reboots to protect availability |
+| **Standard Operating Procedure (SOP)** | Step-by-step execution checklist ensuring consistent, repeatable implementation |
+
+---
+
+## 2. Technical Implications & Documentation
+
+### Technical Considerations
+- **Allowlists / Denylists:** Updating EDR, application allowlists, or firewall policies so legitimate updated binaries aren't blocked (and deprecated ports are closed).
+- **Restricted Activities (Change Freeze):** Locking down non-critical changes during peak business events or active security incidents.
+- **Downtime & Restarts:** Coordinating service restarts and failover clusters to maintain SLA availability targets.
+- **Legacy Applications & Dependencies:** Identifying tightly coupled systems where a library or OS patch could break compatibility.
+
+### Post-Change Documentation & Version Control
+- **Diagrams & Asset Inventory:** Updating network architecture diagrams and CMDB asset records to reflect new IPs, ports, or hosts.
+- **Policies & Procedures:** Revising security baselines and SOPs to match the updated production configuration.
+- **Version Control:** Storing configs, scripts, and firewall policies in Git to maintain a full audit trail (`git log`, `git diff`) and instant rollback capability (`git revert`).
+
+---
+
+## 3. Standard Change Request (RFC) Template
+
+```yaml
+change_id: CR-2026-104
+title: Enforce SSH Key-Only Authentication on Production Linux Bastion
+owner: <security-engineer>
+stakeholders: [SOC Team, Linux Infrastructure, DevOps]
+risk_level: Medium
+impact_analysis: Disables password-based SSH logins; users without registered public keys will lose access.
+test_results: Validated on staging-bastion-01; key-based login succeeded, password auth rejected.
+maintenance_window: Sunday 02:00 - 03:00 UTC
+sop_steps:
+  1. Verify all authorized public keys exist in ~/.ssh/authorized_keys.
+  2. Backup /etc/ssh/sshd_config to /etc/ssh/sshd_config.bak.
+  3. Set PasswordAuthentication no and reload sshd (systemctl reload sshd).
+  4. Validate new SSH session before closing active admin session.
+backout_plan: Restore /etc/ssh/sshd_config.bak and run systemctl reload sshd via out-of-band console.
